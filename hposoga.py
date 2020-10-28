@@ -2,6 +2,7 @@ import numpy as np
 import random
 import pandas as pd
 from ultis import *
+from operator import itemgetter
 
 class Individual():
   
@@ -44,6 +45,9 @@ class HPSOGA():
   """
    implementation of HPSOGA
   """
+  k1 = 0.3
+  k2 = 0.6
+
   def __init__(self,init_instance,population_size,stop_condition):
     self.init_instance = init_instance
     self.population_size = population_size
@@ -59,20 +63,19 @@ class HPSOGA():
       pop_bag.append(Individual(rnd_sol))
     return pop_bag
   
-  def finness_value(self,path):
-    '''
-    caculate fitness value of an individual/path
-    '''
-    pass
-
-  def caculate_fitness(self,):
+  @staticmethod
+  def caculate_fitness(self,path):
     '''
     caculate fitness value of population
     '''
     pass
 
+  def selectionBest(self):
+    new_list = sorted(self.population, key=itemgetter("fitness"), reverse=True)
+    self.population = new_list[:self.population_size]
+
   @staticmethod
-  def crossover_operation(father,mother):
+  def crossover_operator(father,mother):
     '''
     crossover between par1 vs par2
     '''
@@ -105,14 +108,8 @@ class HPSOGA():
 
     return Individual(father_child), Individual(mother_child)
 
-  def crossover(self):
-    '''
-    crossover to get new population
-    '''
-    pass
-
   @staticmethod
-  def mutation(indi, c1, c2, T, gbest):
+  def mutation_operator(indi, c1, c2, T, gbest):
       child = Individual(indi.path)
       sub_pbest = sub_operate(indi.pbest, indi.position)
       mul_pbest = mul_operate(sub_pbest, c1)
@@ -124,6 +121,44 @@ class HPSOGA():
       child.set_fitness()
       child.update_pbest(indi.pbest)
       return child
+  
+  def crossover(self):
+    '''
+    crossover to get new population
+    '''
+    fitnesses = [indi.fitness for indi in self.population]
+    fitness_mean = sum(fitnesses) / len(self.population)
+    fitness_max = max(fitnesses)
+    i = 0
+    for _ in range(self.population_size):
+      #choice parent
+      i,j = np.random.choice(len(self.population_size),2,replace=False)
+      mother = self.population[i]
+      father = self.population[j]
+
+      fitness_bar = max(mother.fitness,father.fitness)
+
+      if fitness_bar > fitness_mean:
+          pc = k1 - k2 * (fitness_max - fitness_bar) / (fitness_max - fitness_mean)
+      else:
+          pc = k1
+      rc = random.random()
+      if rc < pc:
+          child = self.crossover_operator(father,mother)
+          if child != -1:
+              self.population.append(child)
+      i = i + 1
+      
+      
+  def mutation(self):
+    for i, _ in enumerate(self.population):
+      self.population.append(self.mutation_operator(self.population[i]))
+    self.population = self.selectionBest()
+
+  def evalution(self):
+      self.selectionBest()
+      self.crossover()
+      self.mutation()
 
 if __name__ == "__main__":
 
