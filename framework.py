@@ -1,6 +1,7 @@
 import numpy as np 
-from ultis import *
+from ultis import cosine_distances
 from hposoga import *
+# from python_tsp.exact import solve_tsp_dynamic_programming
 
 class Sensor:
     def __init__(self,x,y,pi):
@@ -14,7 +15,7 @@ class framework():
         self.sensors,self.n_sensors,self.E_max,self.E_min=self.read_data_sensors(path_sensor)
         self.matrix_distance=self.compute_matrix_distance()
         self.CN=np.zeros(self.n_sensors,dtype=np.int16)
-        self.T=None
+        self.T=0
         self.btn_flag=0
         self.sit_flag=0
     
@@ -32,7 +33,7 @@ class framework():
         with open(path_sensor,'r') as f:
             data=f.read().splitlines()
         n_sensors=len(data)-1
-        E_max,E_min=tuple(data[0])
+        E_max,E_min=tuple(data[0].split())
         sensors=[]
         for i in range(1,n_sensors+1):
             x,y,pi=tuple(data[i].split())
@@ -56,47 +57,47 @@ class framework():
         '''
         Compute the minimum Hamilton cycle length Ltsp of all sensor nodes
         '''
-        f_best=np.inf
-        c_min=np.inf
-        check=np.zeros(self.n_sensors,dtypr=np.int8)  #0|1
-        x=np.zeros(self.n_sensors,dtype=np.int16)
-
-        def TSP(k,f_tmp):
-            for i in range(1,self.n_sensors):
-                if(check[i]==0):
-                    x[k]=i
-                    check[i]=1
-                    f_tmp+=self.matrix_distance[x[k-1]][x[k]]
-                    if(k==self.n_sensors-1):
-                        if(f_best<f_tmp+self.matrix_distance[x[k]][0]):
-                            f_best=f_tmp+self.matrix_distance[x[k]][0]
-                    else:
-                        if(f_tmp+(self.n_sensors-k)*c_min<f_best):
-                            TSP(k+1,f_tmp)
-                    check[i]=0
-                    f_tmp-=self.matrix_distance[x[k-1]][x[k]]
+        _,distance=solve_tsp_dynamic_programming(np.array(self.matrix_distance))
+        return distance
         
-        def solve():
-            x[0]=0
-            k=1
-            f_tmp=0
-            check[0]=1
-            for i in range(1,self.n_sensors):
-                x[k]=i
-                check[i]=1
-                f_tmp+=self.matrix_distance[x[k-1]],[x[k]]
-                TSP(k+1,f_tmp)
-                check[i]=0
-                f_tmp-=self.matrix_distance(x[k-1],x[k])
+    def get_alive(self,path):
+        size_path=len(path)
+        E_M=self.E_M
+        time_driving=[]
+        time_charging=[]
+        isDead=False
+        for i in range(size_path-1):
+            time_driving.append(self.matrix_distance[path[i]][path[i+1]]/self.v)
 
+        for i in range(size_path-1):
+            time_charging.append(self.T*self.sensors[path[i]].pi/self.U)
 
-        for i in range(self.n_sensors):
-            self.matrix_distance[i][i]=np.inf
+        time_coming_sensor=[]
+        time_coming_sensor.append(time_driving[0])
+        for i in range(1,size_path-1):
+            time_coming_sensor.append(time_coming_sensor[i-1]+time_charging[i]+time_driving[i])
         
-        c_min=min(self.matrix_distance)
-        solve()        
-        return f_best
-    
+        energy_charging=[]
+        for i in range(size_path-1):
+            energy_charging.append(time_charging[i]*self.sensors[path[i]].pi)
+        
+        energy_remain_wce=[]
+        for i in range(size_path-1):
+            E_M=E_M-self.P_M*time_driving[i]
+            energy_remain_wce.append(E_M)
+        
+        E_sensor_remain=[]
+        for i in range(size_path-1):
+            E_sensor_remain.append(self.E_max-time_coming_sensor[i]*self.sensors[path[i]].pi)
+        
+        if(np.array(energy_remain_wce).min()<0):
+            isDead=True
+        if (np.array(E_sensor_remain).min<self.E_min):
+            isDead=True
+        
+        return isDead
+
+
     def compute_fitness(self,path):
         def time_driving(path):
             n=len(path)
@@ -142,5 +143,11 @@ class framework():
             self.sit_flag=2
         else:
             self.sit_flag=3
-        
-        # HPSOGA()
+        print(self.sit_flag)
+        #HPSOGA()
+
+
+path_wce='wce.txt'
+path_sensors='sensors.txt'
+model=framework(path_sensor=path_sensors,path_wce=path_wce)
+model.solve()
