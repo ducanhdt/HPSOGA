@@ -3,13 +3,14 @@ import random
 import pandas as pd
 from ultis import *
 from operator import itemgetter
-
+from framework import framework
+import copy
 class Individual():
   
   def __init__(self,path):
     self.path = np.array(path)
     self.pbest = 0
-    self.fitness = 0
+    self.fitness = framework.compute_fitness(path)
     self.length = len(path)
     self.vec = [0 for _ in range(self.length)]
     self.path_to_position()
@@ -30,7 +31,8 @@ class Individual():
     path = [self.path[0]]
     for i in range(len(self.path)-1):
       path.append(self.position[path[-1]-1])
-    self.path = path
+    if self.path != path:
+      self.update_path(path)
     return path
 
   def update_pbest(self,new_value):
@@ -38,20 +40,23 @@ class Individual():
       self.pbest = new_value
   def update_path(self,new_path):
     self.path = new_path
-  def set_fitness(self,fitness):
-    self.fitness = fitness
-  
+    self.fitness = framework.compute_fitness(path)
+
 class HPSOGA():
   """
    implementation of HPSOGA
   """
   k1 = 0.3
   k2 = 0.6
-
-  def __init__(self,init_instance,population_size,stop_condition):
+  c1 = 0.5
+  c2 = 0.5
+  def __init__(self,init_instance,population_size,stop_condition,framework):
     self.init_instance = init_instance
+    self.framework = framework
     self.population_size = population_size
     self.population = self.init_population(population_size)
+    self.gbest = self.population[0]
+    self.updata_gbest()
     # for i in self.population:
     #   print(i.path)
 
@@ -63,12 +68,19 @@ class HPSOGA():
       pop_bag.append(Individual(rnd_sol))
     return pop_bag
   
+  def updata_gbest(self):
+    gbest = self.population[0]
+    for indi in self.population:
+      if gbest.fitness > indi.fitness:
+        gbest = copy.copy(indi)
+    if gbest.fitness < self.gbest.fitness:
+      self.gbest = gbest
   @staticmethod
   def caculate_fitness(self,path):
     '''
     caculate fitness value of population
     '''
-    pass
+    return self.framework.caculate_fitness(path)
 
   def selectionBest(self):
     new_list = sorted(self.population, key=itemgetter("fitness"), reverse=True)
@@ -108,17 +120,15 @@ class HPSOGA():
 
     return Individual(father_child), Individual(mother_child)
 
-  @staticmethod
-  def mutation_operator(indi, c1, c2, T, gbest):
+  def mutation_operator(self, indi):
       child = Individual(indi.path)
       sub_pbest = sub_operate(indi.pbest, indi.position)
       mul_pbest = mul_operate(sub_pbest, c1)
-      sub_gbest = sub_operate(gbest, indi.position)
+      sub_gbest = sub_operate(self.gbest, indi.position)
       mul_gbest = mul_operate(sub_gbest, c2)
       child.vec = add_operate(mul_pbest, mul_gbest)
       child.position = add_operate_x(child.vec,child.position)
       child.position_to_path()
-      child.set_fitness()
       child.update_pbest(indi.pbest)
       return child
   
@@ -156,14 +166,16 @@ class HPSOGA():
     self.population = self.selectionBest()
 
   def evalution(self):
-      self.selectionBest()
-      self.crossover()
-      self.mutation()
+    self.selectionBest()
+    self.crossover()
+    self.mutation()
 
 if __name__ == "__main__":
+    path_wce = ""
+    path_sensor = ""
+    framework = framework(path_wce= path_wce,path_sensor= path_sensor)
+    HPSOGA([1,2,3,4,5,6,7,8,9],10000,framework=framework)
+    for _ in range(10000):
+      HPSOGA.evalution()
 
-    # hposga = HPSOGA([i for i in range(0,9)],6,1)
-    # print(hposga.population[0].path)
-    # print(hposga.population[1].path)
-    # print(hposga.crossover_operation(hposga.population[0],hposga.population[1]))
-    path_to_vec([6,3,5,1,4,2])
+    

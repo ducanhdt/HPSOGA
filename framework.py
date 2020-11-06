@@ -56,10 +56,11 @@ class framework():
         '''
         Compute the minimum Hamilton cycle length Ltsp of all sensor nodes
         '''
-        global f_best=np.inf
-        global c_min=np.inf
-        global check=np.zeros(self.n_sensors,dtypr=np.int8)  #0|1
-        global x=np.zeros(self.n_sensors,dtype=np.int16)
+        f_best=np.inf
+        c_min=np.inf
+        check=np.zeros(self.n_sensors,dtypr=np.int8)  #0|1
+        x=np.zeros(self.n_sensors,dtype=np.int16)
+
         def TSP(k,f_tmp):
             for i in range(1,self.n_sensors):
                 if(check[i]==0):
@@ -142,4 +143,4 @@ class framework():
         else:
             self.sit_flag=3
         
-        HPSOGA()
+        # HPSOGA()
