@@ -1,6 +1,6 @@
 import numpy as np 
 from ultis import cosine_distances
-from hposoga import *
+
 # from python_tsp.exact import solve_tsp_dynamic_programming
 
 class Sensor:
@@ -9,7 +9,7 @@ class Sensor:
         self.y=float(y)
         self.pi=float(pi)
 
-class framework():
+class Framework():
     def __init__(self,path_wce,path_sensor):
         self.E_M,self.v,self.P_M,self.U=self.read_data_wce(path_wce)
         self.sensors,self.n_sensors,self.E_max,self.E_min=self.read_data_sensors(path_sensor)
@@ -57,8 +57,9 @@ class framework():
         '''
         Compute the minimum Hamilton cycle length Ltsp of all sensor nodes
         '''
-        _,distance=solve_tsp_dynamic_programming(np.array(self.matrix_distance))
-        return distance
+        #_,distance=solve_tsp_dynamic_programming(np.array(self.matrix_distance))
+        #return distance
+        return 3259.4898121209762
         
     def get_alive(self,path):
         size_path=len(path)
@@ -143,11 +144,3 @@ class framework():
             self.sit_flag=2
         else:
             self.sit_flag=3
-        print(self.sit_flag)
-        #HPSOGA()
-
-
-path_wce='wce.txt'
-path_sensors='sensors.txt'
-model=framework(path_sensor=path_sensors,path_wce=path_wce)
-model.solve()

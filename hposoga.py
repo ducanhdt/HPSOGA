@@ -3,26 +3,28 @@ import random
 import pandas as pd
 from ultis import *
 from operator import itemgetter
-from framework import framework
+from framework import Framework
 import copy
 class Individual():
   
   def __init__(self,path):
     self.path = np.array(path)
     self.pbest = 0
-    self.fitness = framework.compute_fitness(path)
+    self.frame=Framework(path_sensor='/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/sensors.txt',
+                        path_wce='/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/wce.txt')
+    self.fitness = self.frame.compute_fitness(path)
     self.length = len(path)
     self.vec = [0 for _ in range(self.length)]
     self.path_to_position()
     
   def path_to_position(self):
-    path =self.path
+    path =list(self.path)
     position = []
     l=len(path)
     # path = np.array(path)
-    for i in range(len(path)):
+    for i in range(len(path)-1):
       x = path.index(i+1)
-      print(i,x,x-l+1,path[x-l+1])
+      #print(i,x,x-l+1,path[x-l+1])
       position.append(path[x-l+1])
     self.position = position
     return position
@@ -40,23 +42,23 @@ class Individual():
       self.pbest = new_value
   def update_path(self,new_path):
     self.path = new_path
-    self.fitness = framework.compute_fitness(path)
+    self.fitness = self.frame.compute_fitness(self.path)
 
 class HPSOGA():
   """
    implementation of HPSOGA
   """
-  k1 = 0.3
-  k2 = 0.6
-  c1 = 0.5
-  c2 = 0.5
-  def __init__(self,init_instance,population_size,stop_condition,framework):
+  def __init__(self,init_instance,population_size,framework,stop_condition=None):
     self.init_instance = init_instance
     self.framework = framework
     self.population_size = population_size
     self.population = self.init_population(population_size)
     self.gbest = self.population[0]
     self.updata_gbest()
+    self.k1 = 0.3
+    self.k2 = 0.6
+    self.c1 = 0.5
+    self.c2 = 0.5
     # for i in self.population:
     #   print(i.path)
 
@@ -123,9 +125,9 @@ class HPSOGA():
   def mutation_operator(self, indi):
       child = Individual(indi.path)
       sub_pbest = sub_operate(indi.pbest, indi.position)
-      mul_pbest = mul_operate(sub_pbest, c1)
+      mul_pbest = mul_operate(sub_pbest, self.c1)
       sub_gbest = sub_operate(self.gbest, indi.position)
-      mul_gbest = mul_operate(sub_gbest, c2)
+      mul_gbest = mul_operate(sub_gbest, self.c2)
       child.vec = add_operate(mul_pbest, mul_gbest)
       child.position = add_operate_x(child.vec,child.position)
       child.position_to_path()
@@ -149,9 +151,9 @@ class HPSOGA():
       fitness_bar = max(mother.fitness,father.fitness)
 
       if fitness_bar > fitness_mean:
-          pc = k1 - k2 * (fitness_max - fitness_bar) / (fitness_max - fitness_mean)
+          pc = self.k1 - self.k2 * (fitness_max - fitness_bar) / (fitness_max - fitness_mean)
       else:
-          pc = k1
+          pc = self.k1
       rc = random.random()
       if rc < pc:
           child = self.crossover_operator(father,mother)
@@ -163,7 +165,7 @@ class HPSOGA():
   def mutation(self):
     for i, _ in enumerate(self.population):
       self.population.append(self.mutation_operator(self.population[i]))
-    self.population = self.selectionBest()
+    self.selectionBest()
 
   def evalution(self):
     self.selectionBest()
@@ -171,11 +173,12 @@ class HPSOGA():
     self.mutation()
 
 if __name__ == "__main__":
-    path_wce = ""
-    path_sensor = ""
-    framework = framework(path_wce= path_wce,path_sensor= path_sensor)
-    HPSOGA([1,2,3,4,5,6,7,8,9],10000,framework=framework)
+    path_wce = "/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/wce.txt"
+    path_sensor = "/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/sensors.txt"
+    framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
+    path_init=[i for i in range(21)]
+    hpsoga=HPSOGA(path_init,10000,framework=framework)
     for _ in range(10000):
-      HPSOGA.evalution()
+      hpsoga.evalution()
 
     
