@@ -48,16 +48,12 @@ def add_operate_x(v,x):
     res = x.copy()
     for i in range(len(v)):
       if v[i]!=0 and v[i]!=x[i]:
-        print(i)
-        print(v[i])
-        print(x.index(v[i])+1)
-        print(x[i])
         res[x.index(v[i])] = x[v[i]-1]
         res[v[i]-1] = x[i]
         res[i] = v[i]
     return res
-
-x = [3,5,2,6,4,1]
-v = [0,0,0,0,1,0]
-print(x)
-print(add_operate_x(v,x))
+if __name__ == "__main__":
+  x = [3,5,2,6,4,1]
+  v = [0,0,0,0,1,0]
+  print(x)
+  print(add_operate_x(v,x))

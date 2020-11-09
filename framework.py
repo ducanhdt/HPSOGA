@@ -18,7 +18,7 @@ class Framework():
         self.T=0
         self.btn_flag=0
         self.sit_flag=0
-    
+        self.solve()
     def read_data_wce(self,path_data_wce):
         '''
         read data of wce

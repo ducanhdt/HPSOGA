@@ -6,23 +6,23 @@ from operator import itemgetter
 from framework import Framework
 import copy
 class Individual():
-  
+  frame=Framework(path_sensor='sensors.txt',
+                      path_wce='wce.txt')
   def __init__(self,path):
     self.path = np.array(path)
-    self.pbest = 0
-    self.frame=Framework(path_sensor='/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/sensors.txt',
-                        path_wce='/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/wce.txt')
-    self.fitness = self.frame.compute_fitness(path)
+    self.fitness = Individual.frame.compute_fitness(path)
     self.length = len(path)
     self.vec = [0 for _ in range(self.length)]
     self.path_to_position()
+    self.pbest = self.position
+    self.pbest_fitness = self.fitness
     
   def path_to_position(self):
     path =list(self.path)
     position = []
     l=len(path)
     # path = np.array(path)
-    for i in range(len(path)-1):
+    for i in range(len(path)):
       x = path.index(i+1)
       #print(i,x,x-l+1,path[x-l+1])
       position.append(path[x-l+1])
@@ -33,22 +33,32 @@ class Individual():
     path = [self.path[0]]
     for i in range(len(self.path)-1):
       path.append(self.position[path[-1]-1])
-    if self.path != path:
-      self.update_path(path)
+    path = np.array(path)
+    for i in range(len(path)):
+      if self.path[i]!= path[i]:
+        self.update_path(path)
+        break
     return path
 
-  def update_pbest(self,new_value):
-    if new_value > self.pbest:
-      self.pbest = new_value
+  def update_pbest(self,new_position,new_fitness):
+    if new_fitness > self.pbest_fitness:
+      self.pbest = new_position
+      self.pbest_fitness = new_fitness
   def update_path(self,new_path):
     self.path = new_path
-    self.fitness = self.frame.compute_fitness(self.path)
+    self.fitness = Individual.frame.compute_fitness(self.path)
+  def print(self):
+    print("path:{}".format(self.path))
+    print("position:{}".format(self.position))
+    print("fitness:{}".format(self.fitness))
+    print("vec:{}".format(self.vec))
+    print('--------------')
 
 class HPSOGA():
   """
    implementation of HPSOGA
   """
-  def __init__(self,init_instance,population_size,framework,stop_condition=None):
+  def __init__(self,init_instance,population_size,stop_condition=None):
     self.init_instance = init_instance
     self.framework = framework
     self.population_size = population_size
@@ -77,15 +87,9 @@ class HPSOGA():
         gbest = copy.copy(indi)
     if gbest.fitness < self.gbest.fitness:
       self.gbest = gbest
-  @staticmethod
-  def caculate_fitness(self,path):
-    '''
-    caculate fitness value of population
-    '''
-    return self.framework.caculate_fitness(path)
 
   def selectionBest(self):
-    new_list = sorted(self.population, key=itemgetter("fitness"), reverse=True)
+    new_list = sorted(self.population, key=lambda x: x.fitness, reverse=True)
     self.population = new_list[:self.population_size]
 
   @staticmethod
@@ -123,15 +127,19 @@ class HPSOGA():
     return Individual(father_child), Individual(mother_child)
 
   def mutation_operator(self, indi):
-      child = Individual(indi.path)
+      try:
+        child = Individual(indi.path)
+        # indi.print()
+      except:
+        print(indi)
       sub_pbest = sub_operate(indi.pbest, indi.position)
       mul_pbest = mul_operate(sub_pbest, self.c1)
-      sub_gbest = sub_operate(self.gbest, indi.position)
+      sub_gbest = sub_operate(self.gbest.position, indi.position)
       mul_gbest = mul_operate(sub_gbest, self.c2)
       child.vec = add_operate(mul_pbest, mul_gbest)
       child.position = add_operate_x(child.vec,child.position)
       child.position_to_path()
-      child.update_pbest(indi.pbest)
+      child.update_pbest(indi.pbest,indi.fitness)
       return child
   
   def crossover(self):
@@ -144,7 +152,7 @@ class HPSOGA():
     i = 0
     for _ in range(self.population_size):
       #choice parent
-      i,j = np.random.choice(len(self.population_size),2,replace=False)
+      i,j = np.random.choice(self.population_size,2,replace=False)
       mother = self.population[i]
       father = self.population[j]
 
@@ -156,29 +164,35 @@ class HPSOGA():
           pc = self.k1
       rc = random.random()
       if rc < pc:
-          child = self.crossover_operator(father,mother)
-          if child != -1:
-              self.population.append(child)
+          child1, child2 = self.crossover_operator(father,mother)
+          # if child != -1:
+          self.population.append(child1)
+          self.population.append(child2)
       i = i + 1
       
       
   def mutation(self):
+    new_pop = []
     for i, _ in enumerate(self.population):
-      self.population.append(self.mutation_operator(self.population[i]))
-    self.selectionBest()
+      new_pop.append(self.mutation_operator(self.population[i]))
+
 
   def evalution(self):
+    # print(self.gbest.fitness)
     self.selectionBest()
     self.crossover()
     self.mutation()
+    self.gbest.print()
 
 if __name__ == "__main__":
-    path_wce = "/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/wce.txt"
-    path_sensor = "/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/sensors.txt"
+    path_wce = "wce.txt"
+    path_sensor = "sensors.txt"
     framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
-    path_init=[i for i in range(21)]
-    hpsoga=HPSOGA(path_init,10000,framework=framework)
-    for _ in range(10000):
-      hpsoga.evalution()
+    path_init=[i for i in range(1,21)]
+    hpsoga=HPSOGA(path_init,100)
+    for i in hpsoga.population:
+      print(framework.compute_fitness(i.path))
+    # for _ in range(10):
+    #   hpsoga.evalution()
 
     
