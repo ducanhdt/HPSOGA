@@ -142,5 +142,5 @@ class Framework():
             self.sit_flag=1
         elif(self.btn_flag==0 and self.E_M<E_M_tmp):
             self.sit_flag=2
-        else:
+        elif(self.btn_flag==1 and self.E_M<E_M_tmp):
             self.sit_flag=3
