@@ -1,5 +1,6 @@
 import numpy as np 
 from ultis import cosine_distances
+import copy
 
 # from python_tsp.exact import solve_tsp_dynamic_programming
 
@@ -18,9 +19,9 @@ class Framework():
         self.T=0
         self.btn_flag=0
         self.sit_flag=0
-
+        self.E_remain_T=[]
         self.solve()
-
+    
     def read_data_wce(self,path_data_wce):
         '''
         read data of wce
@@ -55,6 +56,12 @@ class Framework():
 
         return matrix_distance
     
+    def get_e_remain(self):
+        
+        self.E_remain_T=[self.E_max-(self.U-self.sensors[i].pi)*self.sensors[i].pi*self.T/self.U
+                        for i in range(1,self.n_sensors)]
+        self.E_remain_T=[0]+self.E_remain_T
+    
     def compute_tsp(self):
         '''
         Compute the minimum Hamilton cycle length Ltsp of all sensor nodes
@@ -64,41 +71,32 @@ class Framework():
         return 4270.224625147727
         
     def get_alive(self,path):
-        size_path=len(path)
-        E_M=self.E_M
+        path_tmp=[0]+path
+        size_path=len(path_tmp)
         time_driving=[]
-        time_charging=[]
-        isDead=False
+        n_dead=0
+        E_M=self.E_M
+        E_remain=copy.copy(self.E_remain_T)
         for i in range(size_path-1):
-            time_driving.append(self.matrix_distance[path[i]][path[i+1]]/self.v)
+            time_driving.append(self.matrix_distance[path_tmp[i]][path_tmp[i+1]]/self.v)
+        
+        time_coming=0
+        t_driving=0
+        for i in range(1,size_path):
+            t_driving+=time_driving[i-1]
+            time_coming+=t_driving
+            E_remain[i]=E_remain[i]-self.sensors[i].pi*time_coming
+            E_M=E_M-self.P_M*t_driving
+            if(E_M<=0):
+                n_dead=size_path-i
+                break
+            if(E_remain[i]<self.E_min):
+                n_dead+=1
+            else:
+                time_coming+=(self.E_max-E_remain[i])/(self.U-self.sensors[i].pi)
+        
+        return n_dead
 
-        for i in range(size_path-1):
-            time_charging.append(self.T*self.sensors[path[i]].pi/self.U)
-
-        time_coming_sensor=[]
-        time_coming_sensor.append(time_driving[0])
-        for i in range(1,size_path-1):
-            time_coming_sensor.append(time_coming_sensor[i-1]+time_charging[i]+time_driving[i])
-        
-        energy_charging=[]
-        for i in range(size_path-1):
-            energy_charging.append(time_charging[i]*self.sensors[path[i]].pi)
-        
-        energy_remain_wce=[]
-        for i in range(size_path-1):
-            E_M=E_M-self.P_M*time_driving[i]
-            energy_remain_wce.append(E_M)
-        
-        E_sensor_remain=[]
-        for i in range(size_path-1):
-            E_sensor_remain.append(self.E_max-time_coming_sensor[i]*self.sensors[path[i]].pi)
-        
-        if(np.array(energy_remain_wce).min()<0):
-            isDead=True
-        if (np.array(E_sensor_remain).min()<self.E_min):
-            isDead=True
-        
-        return isDead
 
     def compute_fitness(self,path):
         def time_driving(path):
@@ -130,7 +128,7 @@ class Framework():
                 for i in range(1,self.n_sensors)]
         self.T=max(T_i)
         P=sum([self.sensors[i].pi for i in range(1,self.n_sensors)])
-
+        self.get_e_remain()
         for i in range(1,self.n_sensors):
             t_i_vac=self.T-t_tsp_min-P*self.T/self.U
             if(t_i_vac<0):
@@ -157,8 +155,9 @@ class Framework():
 '''
 path_wce='/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/wce.txt'
 path_sensor='/home/lnq/Desktop/Hoc/2020/ttth/HPSOGA/sensors.txt'
-path=[0,4,7,19,16,1,12,3,18,15,8,2,6,5,9,13,20,14,11,17,10,0]
+path=[8,12,4,13,18,10,15,14,16,6,2,11,3,5,17,7,9,19,20,1]
 model=Framework(path_wce=path_wce,path_sensor=path_sensor)
-model.solve()
+#model.solve()
+print('so nut chet: ',model.get_alive(path))
 #model.compute_fitness(path)
 '''
