@@ -190,6 +190,7 @@ if __name__ == "__main__":
     path_wce = "wce.txt"
     path_sensor = "sensors.txt"
     framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
+    framework.solve()
     path_init=[i for i in range(1,21)]
     
     hpsoga=HPSOGA(path_init,1000)
