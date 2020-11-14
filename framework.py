@@ -19,6 +19,7 @@ class Framework():
         self.btn_flag=0
         self.sit_flag=0
         self.solve()
+
     def read_data_wce(self,path_data_wce):
         '''
         read data of wce
@@ -59,7 +60,7 @@ class Framework():
         '''
         #_,distance=solve_tsp_dynamic_programming(np.array(self.matrix_distance))
         #return distance
-        return 3259.4898121209762
+        return 4270.4898121209762
         
     def get_alive(self,path):
         size_path=len(path)
@@ -93,11 +94,10 @@ class Framework():
         
         if(np.array(energy_remain_wce).min()<0):
             isDead=True
-        if (np.array(E_sensor_remain).min<self.E_min):
+        if (np.array(E_sensor_remain).min()<self.E_min):
             isDead=True
         
         return isDead
-
 
     def compute_fitness(self,path):
         def time_driving(path):

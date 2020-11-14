@@ -60,7 +60,6 @@ class HPSOGA():
   """
   def __init__(self,init_instance,population_size,stop_condition=None):
     self.init_instance = init_instance
-    self.framework = framework
     self.population_size = population_size
     self.population = self.init_population(population_size)
     self.gbest = self.population[0]
@@ -83,11 +82,13 @@ class HPSOGA():
   def updata_gbest(self):
     gbest = self.population[0]
     for indi in self.population:
-      if gbest.fitness > indi.fitness:
-        gbest = copy.copy(indi)
-    if gbest.fitness < self.gbest.fitness:
-      self.gbest = gbest
-
+      if gbest.fitness < indi.fitness:
+        gbest = copy.deepcopy(indi)
+    if gbest.fitness > self.gbest.fitness:
+      self.gbest = copy.deepcopy(gbest)
+      print("new best fitness {}".format(self.gbest.fitness))
+      print(framework.get_alive(self.gbest.path))
+    # print("new gbest fitness: {}".format(gbest.fitness))
   def selectionBest(self):
     new_list = sorted(self.population, key=lambda x: x.fitness, reverse=True)
     self.population = new_list[:self.population_size]
@@ -179,20 +180,21 @@ class HPSOGA():
 
   def evalution(self):
     # print(self.gbest.fitness)
+    self.updata_gbest()
     self.selectionBest()
     self.crossover()
     self.mutation()
-    self.gbest.print()
+    # self.gbest.print()
 
 if __name__ == "__main__":
     path_wce = "wce.txt"
     path_sensor = "sensors.txt"
     framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
     path_init=[i for i in range(1,21)]
-    hpsoga=HPSOGA(path_init,100)
-    for i in hpsoga.population:
-      print(framework.compute_fitness(i.path))
-    # for _ in range(10):
-    #   hpsoga.evalution()
-
     
+    hpsoga=HPSOGA(path_init,1000)
+    # for i in hpsoga.population:
+    #   print(framework.compute_fitness(i.path))
+    for _ in range(1000):
+      print(_)
+      hpsoga.evalution()
