@@ -63,3 +63,4 @@ if __name__ == "__main__":
   n = add_operate_x(v,x)
   print(checksum(n))
   print(n)
+  print(sorted([1,3,2],reverse=True))

@@ -71,6 +71,7 @@ class HPSOGA():
     self.k2 = 0.6
     self.c1 = 0.5
     self.c2 = 0.5
+    self.new_gene = []
     # for i in self.population:
     #   print(i.path)
 
@@ -93,8 +94,13 @@ class HPSOGA():
       print(framework.get_alive(self.gbest.path))
     # print("new gbest fitness: {}".format(gbest.fitness))
   def selectionBest(self):
-    new_list = sorted(self.population, key=lambda x: x.fitness, reverse=True)
-    self.population = new_list[:self.population_size]
+    self.population = sorted(self.population, key=lambda x: x.fitness, reverse=True)
+    self.new_gene = sorted(self.new_gene, key=lambda x: x.fitness, reverse=True)
+    for i,indi in enumerate(self.new_gene):
+      if self.new_gene[i].fitness < self.gbest.fitness or i>self.population_size:
+        break
+      self.population[-1-i].update_path(self.new_gene[i].path)
+    self.new_gene=[]
 
   @staticmethod
   def crossover_operator(father,mother):
@@ -170,8 +176,8 @@ class HPSOGA():
       if rc < pc:
           child1, child2 = self.crossover_operator(father,mother)
           # if child != -1:
-          self.population.append(child1)
-          self.population.append(child2)
+          self.new_gene.append(child1)
+          self.new_gene.append(child2)
       i = i + 1
       
       
@@ -179,19 +185,13 @@ class HPSOGA():
     new_pop = []
     for i, _ in enumerate(self.population):
       new_indi = self.mutation_operator(self.population[i])
-      if not new_indi.checksum():
-        new_indi.print()
-      else:
-        new_pop.append(new_indi)
-    self.population.extend(new_pop)
-
+      self.new_gene.append(new_indi)
 
   def evalution(self):
     # print(self.gbest.fitness)
     self.updata_gbest()
     self.selectionBest()
     self.crossover()
-    # self.mutation_operator(self.population[10])
     self.mutation()
     # self.gbest.print()
 
@@ -205,6 +205,8 @@ if __name__ == "__main__":
     hpsoga=HPSOGA(path_init,1000)
     # for i in hpsoga.population:
     #   print(framework.compute_fitness(i.path))
-    for _ in range(100):
+    for _ in range(1000):
       print(_)
       hpsoga.evalution()
+    hpsoga.gbest.print()
+    framework.get_alive(hpsoga.gbest.path)
