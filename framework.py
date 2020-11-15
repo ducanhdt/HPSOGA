@@ -88,7 +88,7 @@ class Framework():
             E_remain[i]=E_remain[i]-self.sensors[i].pi*time_coming
             E_M=E_M-self.P_M*t_driving
             if(E_M<=0):
-                n_dead=size_path-i
+                n_dead=size_path-i-1
                 break
             if(E_remain[i]<self.E_min):
                 n_dead+=1
