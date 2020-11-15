@@ -48,12 +48,18 @@ def add_operate_x(v,x):
     res = x.copy()
     for i in range(len(v)):
       if v[i]!=0 and v[i]!=x[i]:
-        res[x.index(v[i])] = x[v[i]-1]
-        res[v[i]-1] = x[i]
+        res[res.index(v[i])] = res[v[i]-1]
+        res[v[i]-1] = res[i]
         res[i] = v[i]
     return res
+def checksum(path):
+  return len(list(set(path)))==len(path)
+
 if __name__ == "__main__":
-  x = [3,5,2,6,4,1]
-  v = [0,0,0,0,1,0]
+  x = [14, 7, 16, 12, 3, 1, 5, 2, 15, 20, 10, 11, 13, 9, 19, 8, 6, 17, 18, 4]
+  v = [16, 7, 13, 10, 18, 1, 6, 2, 15, 0, 0, 0, 0, 0, 12, 19, 14, 11, 3, 5]
   print(x)
-  print(add_operate_x(v,x))
+  print(v)
+  n = add_operate_x(v,x)
+  print(checksum(n))
+  print(n)

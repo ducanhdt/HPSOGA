@@ -39,6 +39,9 @@ class Individual():
         self.update_path(path)
         break
     return path
+  
+  def checksum(self):
+    return len(list(set(self.path)))==len(self.path)
 
   def update_pbest(self,new_position,new_fitness):
     if new_fitness > self.pbest_fitness:
@@ -48,7 +51,7 @@ class Individual():
     self.path = new_path
     self.fitness = Individual.frame.compute_fitness(self.path)
   def print(self):
-    print("path:{}".format(self.path))
+    print("path:{}".format(list(self.path)))
     print("position:{}".format(self.position))
     print("fitness:{}".format(self.fitness))
     print("vec:{}".format(self.vec))
@@ -132,7 +135,7 @@ class HPSOGA():
         child = Individual(indi.path)
         # indi.print()
       except:
-        print(indi)
+        indi.print()
       sub_pbest = sub_operate(indi.pbest, indi.position)
       mul_pbest = mul_operate(sub_pbest, self.c1)
       sub_gbest = sub_operate(self.gbest.position, indi.position)
@@ -175,7 +178,12 @@ class HPSOGA():
   def mutation(self):
     new_pop = []
     for i, _ in enumerate(self.population):
-      new_pop.append(self.mutation_operator(self.population[i]))
+      new_indi = self.mutation_operator(self.population[i])
+      if not new_indi.checksum():
+        new_indi.print()
+      else:
+        new_pop.append(new_indi)
+    self.population.extend(new_pop)
 
 
   def evalution(self):
@@ -183,6 +191,7 @@ class HPSOGA():
     self.updata_gbest()
     self.selectionBest()
     self.crossover()
+    # self.mutation_operator(self.population[10])
     self.mutation()
     # self.gbest.print()
 
@@ -192,10 +201,10 @@ if __name__ == "__main__":
     framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
     framework.solve()
     path_init=[i for i in range(1,21)]
-    
+
     hpsoga=HPSOGA(path_init,1000)
     # for i in hpsoga.population:
     #   print(framework.compute_fitness(i.path))
-    for _ in range(1000):
+    for _ in range(100):
       print(_)
       hpsoga.evalution()
