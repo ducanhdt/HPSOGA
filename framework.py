@@ -12,7 +12,7 @@ class Sensor:
 
 class Framework():
     def __init__(self,path_wce,path_sensor):
-        self.E_MC,self.E_dri,self.v,self.P_M,self.U=self.read_data_wce(path_wce)
+        self.E_MC,self.v,self.P_M,self.U=self.read_data_wce(path_wce)
         self.sensors,self.n_sensors,self.E_remain_T=self.read_data_sensors(path_sensor)
         self.matrix_distance=self.compute_matrix_distance()
         self.CN=np.zeros(self.n_sensors,dtype=np.int16)
@@ -31,8 +31,8 @@ class Framework():
         with open(path_data_wce,'r') as f:
             data=f.read().splitlines()
 
-        E_MC,E_dri,v,P_M,U=tuple(data)
-        return float(E_MC),float(E_dri),float(v),float(P_M),float(U)
+        E_MC,v,P_M,U=tuple(data)
+        return float(E_MC),float(v),float(P_M),float(U)
 
     def read_data_sensors(self,path_sensor):
         with open(path_sensor,'r') as f:
@@ -69,11 +69,12 @@ class Framework():
         return distance
         
     def get_alive(self,path):
+        time_charging_each_node=[]
         path_tmp=[0]+path
         size_path=len(path_tmp)
         time_driving=[]
         n_dead=0
-        E_dri=self.E_dri
+        time_max=72000
         E_mc=self.E_MC
         E_remain=copy.copy(self.E_remain_T)
         E_remain=[0]+E_remain
@@ -93,10 +94,12 @@ class Framework():
             if(E_remain[i]<self.E_min):
                 n_dead+=1
             else:
-                time_coming+=(self.E_max-E_remain[i])/(self.U-self.sensors[i].pi)
+                t=(self.E_max-E_remain[i])/(self.U-self.sensors[i].pi)
+                time_coming+=t
                 E_mc=E_mc-(self.E_max-E_remain[i])
+                time_charging_each_node.append(t)
         
-        return n_dead
+        return n_dead,time_charging_each_node
 
 
     def compute_fitness(self,path):
@@ -176,14 +179,18 @@ class Framework():
                 if(n_i>1):
                     self.CN[i]=n_i-1
         
-        if(self.btn_flag==1 and self.E_dri>E_dri_tmp):
+        if(self.btn_flag==1 and self.E_MC>E_dri_tmp):
             self.sit_flag=1
-        elif(self.btn_flag==0 and self.E_dri<E_dri_tmp):
+        elif(self.btn_flag==0 and self.E_MC<E_dri_tmp):
             self.sit_flag=2
-        elif(self.btn_flag==1 and self.E_dri<E_dri_tmp):
+        elif(self.btn_flag==1 and self.E_MC<E_dri_tmp):
             self.sit_flag=3
         
         if(self.sit_flag==1):
             self.encode()
         
+        print(self.sit_flag)
+    
+
+
 
