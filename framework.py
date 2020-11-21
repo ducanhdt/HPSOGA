@@ -1,8 +1,8 @@
 import numpy as np 
 from ultis import cosine_distances
 import copy
-
-# from python_tsp.exact import solve_tsp_dynamic_programming
+from python_tsp.exact import solve_tsp_dynamic_programming
+from python_tsp.heuristics import solve_tsp_simulated_annealing
 
 class Sensor:
     def __init__(self,x,y,pi):
@@ -64,9 +64,8 @@ class Framework():
         '''
         Compute the minimum Hamilton cycle length Ltsp of all sensor nodes
         '''
-        #_,distance=solve_tsp_dynamic_programming(np.array(self.matrix_distance))
-        #return distance
-        return 4270.224625147727
+        _,distance=solve_tsp_simulated_annealing(np.array(self.matrix_distance))
+        return distance
         
     def get_alive(self,path):
         path_tmp=[0]+path
@@ -171,8 +170,6 @@ class Framework():
                 n_i=int(np.ceil(n_i))
                 if(n_i>1):
                     self.CN[i]=n_i-1
-            if(i==19):
-                self.CN[i]=1
         
         if(self.btn_flag==1 and self.E_dri>E_dri_tmp):
             self.sit_flag=1
@@ -181,7 +178,6 @@ class Framework():
         elif(self.btn_flag==1 and self.E_dri<E_dri_tmp):
             self.sit_flag=3
         
-        self.sit_flag=1
         if(self.sit_flag==1):
             self.encode()
         
