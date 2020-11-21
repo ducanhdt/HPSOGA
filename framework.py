@@ -2,6 +2,7 @@ import numpy as np
 from ultis import cosine_distances
 import copy
 from python_tsp.heuristics import solve_tsp_simulated_annealing
+import os
 
 class Sensor:
     def __init__(self,x,y,pi):
@@ -75,6 +76,7 @@ class Framework():
         E_dri=self.E_dri
         E_mc=self.E_MC
         E_remain=copy.copy(self.E_remain_T)
+        E_remain=[0]+E_remain
         for i in range(size_path-1):
             time_driving.append(self.matrix_distance[path_tmp[i]][path_tmp[i+1]]/self.v)
         
@@ -118,15 +120,15 @@ class Framework():
         return fitness
     
     def encode(self):
-        sum_CN=sum(self.CN)
-        self.n_sensors_encode=self.n_sensors+sum_CN
+        self.n_sensors_encode=self.n_sensors+sum(self.CN)
         self.list_sensors_encode=[0]*self.n_sensors_encode
+        count_CN=0
         for i in range(self.n_sensors):
             self.list_sensors_encode[i]=i
             if(self.CN[i]!=0):
-                sum_CN-=self.CN[i]
                 for j in range(self.CN[i]):
-                    self.list_sensors_encode[self.n_sensors_encode-sum_CN+j-1]=i
+                    self.list_sensors_encode[self.n_sensors+count_CN+j-1]=i
+                count_CN+=self.CN[i]
         
         matrix_distance_encode=np.zeros((self.n_sensors_encode,self.n_sensors_encode))
         for i in range(self.n_sensors_encode-1):

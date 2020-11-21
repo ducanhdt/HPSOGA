@@ -188,19 +188,21 @@ class HPSOGA():
     self.selectionBest()
     self.crossover()
     self.mutation()
-    # self.gbest.print()
+    self.gbest.print()
 
 if __name__ == "__main__":
   gbest_list = []
-  for x in range(5):
+  for x in range(1):
     framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
     framework.solve()
     path_init=[i for i in range(1,framework.n_sensors_encode)]
     print(path_init)
-    hpsoga=HPSOGA(path_init,1000)
+    hpsoga=HPSOGA(path_init,100)
     # for i in hpsoga.population:
     #   print(framework.compute_fitness(i.path))
-    for _ in range(100):
+    # neu khong tang sau 50 the he thi dung 
+    for _ in range(250):
+      print("generation {}:".format(_))
       hpsoga.evalution()
     gbest_list.append(hpsoga.gbest)
   for i in gbest_list:
