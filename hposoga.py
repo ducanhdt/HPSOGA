@@ -204,7 +204,7 @@ if __name__ == "__main__":
     for _ in range(250):
       print("generation {}:".format(_))
       hpsoga.evalution()
-    gbest_list.append(hpsoga.gbest)
+    framework.get_alive(hp)
   for i in gbest_list:
     i.print()
     # from os import listdir
