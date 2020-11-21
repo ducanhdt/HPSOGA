@@ -183,3 +183,4 @@ class Framework():
         
         if(self.sit_flag==1):
             self.encode()
+        print("situation: {}".format(self.sit_flag))

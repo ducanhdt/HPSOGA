@@ -5,9 +5,13 @@ from ultis import *
 from operator import itemgetter
 from framework import Framework
 import copy
+
+path_wce = "wce.txt"
+path_sensor = "data_chi_huong/normal/n25_01_simulated.txt" #"sensors.txt"
+
 class Individual():
-  frame=Framework(path_sensor='sensors.txt',
-                      path_wce='wce.txt')
+  frame=Framework(path_sensor=path_sensor,
+                      path_wce=path_wce)
   def __init__(self,path):
     self.path = np.array(path)
     self.fitness = Individual.frame.compute_fitness(path)
@@ -187,15 +191,30 @@ class HPSOGA():
     # self.gbest.print()
 
 if __name__ == "__main__":
-    path_wce = "wce.txt"
-    path_sensor = "sensors.txt"
+  gbest_list = []
+  for x in range(5):
     framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
     framework.solve()
-    path_init=[i for i in range(1,21)]
-    
+    path_init=[i for i in range(1,framework.n_sensors_encode)]
+    print(path_init)
     hpsoga=HPSOGA(path_init,1000)
     # for i in hpsoga.population:
     #   print(framework.compute_fitness(i.path))
-    for _ in range(1000):
-      print(_)
+    for _ in range(100):
       hpsoga.evalution()
+    gbest_list.append(hpsoga.gbest)
+  for i in gbest_list:
+    i.print()
+    # from os import listdir
+
+    # for file in listdir("data_chi_huong/grid/base_station_(250.0, 250.0)/"):
+    #   if file[:4] != "gr25":
+    #     continue
+    #   print(file)
+    #   path_sensor = "data_chi_huong/grid/base_station_(250.0, 250.0)/"+file
+    #   framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
+    #   framework.solve()
+    #   if framework.sit_flag==1:
+    #     print("-------------------situation 1:")
+    #     print(path_sensor)
+          
