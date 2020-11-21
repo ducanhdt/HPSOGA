@@ -1,7 +1,6 @@
 import numpy as np 
 from ultis import cosine_distances
 import copy
-from python_tsp.exact import solve_tsp_dynamic_programming
 from python_tsp.heuristics import solve_tsp_simulated_annealing
 
 class Sensor:
@@ -21,6 +20,7 @@ class Framework():
         self.sit_flag=0
         self.E_max=10800
         self.E_min=540
+        self.n_sensors_encode=self.n_sensors
         self.solve()
 
     def read_data_wce(self,path_data_wce):
@@ -147,8 +147,11 @@ class Framework():
 
     def decode(self,path):
         path_decode=[]
-        for i in path:
-            path_decode.append(self.list_sensors_encode[i])
+        if(self.n_sensors!=self.n_sensors_encode):
+            for i in path:
+                path_decode.append(self.list_sensors_encode[i])
+        else:
+            path_decode=path
         return path_decode
     
     def solve(self):
@@ -180,8 +183,3 @@ class Framework():
         
         if(self.sit_flag==1):
             self.encode()
-        
-        print(self.sit_flag)
-    
-
-
