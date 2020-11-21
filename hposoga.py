@@ -204,7 +204,11 @@ if __name__ == "__main__":
     for _ in range(250):
       print("generation {}:".format(_))
       hpsoga.evalution()
-    framework.get_alive(hp)
+    _,time_charging_each_node,total_charing,t_dri,e_mc_remain = framework.get_alive(hpsoga.gbest.path)
+    print("nang luong sac:{}, thoi gian sac: {}".format(total_charing*framework.U,total_charing))
+    print("nang luong di chuyen: {}, thoi gian di chuyen: {}".format(t_dri*framework.P_M,t_dri))
+    print(time_charging_each_node)
+    print("nang luong con lai {}".format(e_mc_remain))
   for i in gbest_list:
     i.print()
     # from os import listdir

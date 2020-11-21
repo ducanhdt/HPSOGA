@@ -85,10 +85,10 @@ class Framework():
         t_driving=0
         for i in range(1,size_path):
             t_driving+=time_driving[i-1]
-            time_coming+=t_driving
+            time_coming+=time_driving[i-1]
             E_remain[i]=float(E_remain[i])-float(self.sensors[i].pi)*time_coming
-            E_dri=E_dri-self.P_M*t_driving
-            if(E_dri<=0 or E_mc<=0):
+            E_mc=E_mc-self.P_M*time_driving[i-1]
+            if(E_mc<=0):
                 n_dead=size_path-i-1
                 break
             if(E_remain[i]<self.E_min):
@@ -98,8 +98,8 @@ class Framework():
                 time_coming+=t
                 E_mc=E_mc-(self.E_max-E_remain[i])
                 time_charging_each_node.append(t)
-        
-        return n_dead,time_charging_each_node
+        total_charging=sum(time_charging_each_node)
+        return n_dead,time_charging_each_node,total_charging,t_driving,E_mc
 
 
     def compute_fitness(self,path):
