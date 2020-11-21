@@ -87,8 +87,8 @@ class Framework():
             t_driving+=time_driving[i-1]
             time_coming+=t_driving
             E_remain[i]=float(E_remain[i])-float(self.sensors[i].pi)*time_coming
-            E_dri=E_dri-self.P_M*t_driving
-            if(E_dri<=0 or E_mc<=0):
+            E_mc=E_mc-self.P_M*t_driving
+            if(E_mc<=0):
                 n_dead=size_path-i-1
                 break
             if(E_remain[i]<self.E_min):
@@ -191,6 +191,3 @@ class Framework():
         
         print(self.sit_flag)
     
-
-
-
