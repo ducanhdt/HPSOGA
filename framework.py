@@ -69,11 +69,11 @@ class Framework():
         return distance
         
     def get_alive(self,path):
-        time_charging_each_node=[]
         path_tmp=[0]+path
         size_path=len(path_tmp)
         time_driving=[]
         n_dead=0
+        check_dead=[1]*(size_path-1)
         time_max=72000
         E_mc=self.E_MC
         E_remain=copy.copy(self.E_remain_T)
@@ -82,25 +82,57 @@ class Framework():
             time_driving.append(self.matrix_distance[path_tmp[i]][path_tmp[i+1]]/self.v)
         
         time_coming=0
-        t_driving=0
-        for i in range(1,size_path):
-            t_driving+=time_driving[i-1]
-            time_coming+=time_driving[i-1]
-            E_remain[i]=float(E_remain[i])-float(self.sensors[i].pi)*time_coming
-            E_mc=E_mc-self.P_M*time_driving[i-1]
-            if(E_mc<=0):
-                n_dead=size_path-i-1
-                break
-            if(E_remain[i]<self.E_min):
-                n_dead+=1
-            else:
-                t=(self.E_max-E_remain[i])/(self.U-self.sensors[i].pi)
-                time_coming+=t
-                E_mc=E_mc-(self.E_max-E_remain[i])
-                time_charging_each_node.append(t)
-        total_charging=sum(time_charging_each_node)
-        return n_dead,time_charging_each_node,total_charging,t_driving,E_mc
+        count_cycle=0
+        total_time=0
+        time_end_charging_each_node=[0]*size_path
+        while(time_coming<=time_max):
+            time_coming=0
+            for i in range(1,size_path):
+                if(total_time>time_max):
+                    break
+                time_coming+=time_driving[i-1]
+                total_time+=time_driving[i-1]
+        
+                if(check_dead[i-1]==0):
+                    new_time=float(self.E_max-self.E_min)/(self.U-self.sensors[i].pi)
+                    time_coming+=new_time
+                    total_time+=new_time
+                    continue
 
+                E_remain[i]=float(E_remain[i])-float(self.sensors[i].pi)*time_coming
+                E_mc=E_mc-self.P_M*time_driving[i-1]
+                if(E_mc<=0):
+                    for j in range(i-1,size_path-1):
+                        check_dead[j]=0
+                    break
+                if(E_remain[i]<self.E_min):
+                    check_dead[i-1]=0
+                    new_time=float(self.E_max-self.E_min)/(self.U-self.sensors[i].pi)
+                    time_coming+=new_time
+                    total_time+=new_time
+                else:
+                    new_time=(self.E_max-E_remain[i])/(self.U-self.sensors[i].pi)
+                    time_coming+=new_time
+                    total_time+=new_time
+                    time_end_charging_each_node[i]=total_time
+                    E_mc=E_mc-(self.E_max-E_remain[i])
+                    E_remain[i]=self.E_max
+            
+            total_time+=(self.matrix_distance[path[-1]][0])/self.v
+            for i in range(1,size_path):
+                E_remain[i]-=(total_time-time_end_charging_each_node[i])*self.sensors[i].pi
+            
+            n_dead=size_path-1-sum(check_dead)
+            count_cycle+=1
+            print('CYCLE {}: '.format(count_cycle) )
+            print('So luong nut chet: ',n_dead)
+            print('Thoi gian hien tai:', total_time)
+            print('Nang luong con lai cua moi nut: ',E_remain)
+            print('Trang thai cua moi nut: ',check_dead)
+            print('Nang luong con lai cua WCE: ',max(E_mc,0))
+
+            print('-------------------------------------------------------------------------------------')
+            E_mc=self.E_MC
 
     def compute_fitness(self,path):
         def time_driving(path):
@@ -188,4 +220,5 @@ class Framework():
         
         if(self.sit_flag==1):
             self.encode()
-        print("situation: {}".format(self.sit_flag))
+        
+        #print(self.sit_flag)
