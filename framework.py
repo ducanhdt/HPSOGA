@@ -8,7 +8,7 @@ class Sensor:
     def __init__(self,x,y,pi):
         self.x=float(x)
         self.y=float(y)
-        self.pi=float(pi)
+        self.pi=float(pi)*2
 
 class Framework():
     def __init__(self,path_wce,path_sensor):
@@ -85,7 +85,7 @@ class Framework():
         count_cycle=0
         total_time=0
         time_end_charging_each_node=[0]*size_path
-        while(time_coming<=time_max):
+        while(total_time<=time_max):
             time_coming=0
             for i in range(1,size_path):
                 if(total_time>time_max):
@@ -119,21 +119,23 @@ class Framework():
                     E_remain[i]=self.E_max
             
             total_time+=(self.matrix_distance[path[-1]][0])/self.v
+            assert (self.T>time_coming)
             for i in range(1,size_path):
+                # total_time+=+self.T-time_coming
                 E_remain[i]-=(total_time-time_end_charging_each_node[i])*self.sensors[i].pi
-            
             n_dead=size_path-1-sum(check_dead)
             count_cycle+=1
             print('CYCLE {}: '.format(count_cycle) )
             print('So luong nut chet: ',n_dead)
             print('Thoi gian hien tai:', total_time)
             print('Nang luong con lai cua moi nut: ',E_remain)
+            print('thoi gian ket thuc moi node: ',time_end_charging_each_node)
             print('Trang thai cua moi nut: ',check_dead)
             print('Nang luong con lai cua WCE: ',max(E_mc,0))
-
+            print('time max ', time_max)
             print('-------------------------------------------------------------------------------------')
             E_mc=self.E_MC
-
+        print(path_tmp)
     def compute_fitness(self,path):
         def time_driving(path):
             n=len(path)

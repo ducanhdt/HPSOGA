@@ -1,3 +1,4 @@
 data_chi_huong
 *.pyc
 *.txt
+logdir*

@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import random
 import pandas as pd
@@ -6,12 +7,8 @@ from operator import itemgetter
 from framework import Framework
 import copy
 
-path_wce = "wce.txt"
-path_sensor = "data_chi_huong/normal/n25_01_simulated.txt" #"sensors.txt"
-
 class Individual():
-  frame=Framework(path_sensor=path_sensor,
-                      path_wce=path_wce)
+  frame=None
   def __init__(self,path):
     self.path = np.array(path)
     self.fitness = Individual.frame.compute_fitness(path)
@@ -52,7 +49,7 @@ class Individual():
     self.path = new_path
     self.fitness = Individual.frame.compute_fitness(self.path)
   def print(self):
-    print("path:{}".format(self.path))
+    print("path:{}".format(Individual.frame.decode(self.path)))
     print("position:{}".format(self.position))
     print("fitness:{}".format(self.fitness))
     print("vec:{}".format(self.vec))
@@ -91,7 +88,7 @@ class HPSOGA():
     if gbest.fitness > self.gbest.fitness:
       self.gbest = copy.deepcopy(gbest)
       print("new best fitness {}".format(self.gbest.fitness))
-      print(framework.get_alive(self.gbest.path))
+      # print(framework.get_alive(self.gbest.path))
     # print("new gbest fitness: {}".format(gbest.fitness))
   def selectionBest(self):
     new_list = sorted(self.population, key=lambda x: x.fitness, reverse=True)
@@ -191,36 +188,49 @@ class HPSOGA():
     self.gbest.print()
 
 if __name__ == "__main__":
-  gbest_list = []
-  for x in range(1):
-    framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
-    framework.solve()
-    path_init=[i for i in range(1,framework.n_sensors_encode)]
-    print(path_init)
-    hpsoga=HPSOGA(path_init,100)
-    # for i in hpsoga.population:
-    #   print(framework.compute_fitness(i.path))
-    # neu khong tang sau 50 the he thi dung 
-    for _ in range(250):
-      print("generation {}:".format(_))
-      hpsoga.evalution()
-    _,time_charging_each_node,total_charing,t_dri,e_mc_remain = framework.get_alive(hpsoga.gbest.path)
-    print("nang luong sac:{}, thoi gian sac: {}".format(total_charing*framework.U,total_charing))
-    print("nang luong di chuyen: {}, thoi gian di chuyen: {}".format(t_dri*framework.P_M,t_dri))
-    print(time_charging_each_node)
-    print("nang luong con lai {}".format(e_mc_remain))
-  for i in gbest_list:
-    i.print()
-    # from os import listdir
+  path_wce = "wce.txt"
+  import os 
+  base_path = "data_chi_huong/uniform/base_station_(250.0, 250.0)"
+  for file_name in os.listdir(base_path):
+    if file_name[:3] not in ['u25']:
+      continue
+    path_sensor = base_path+'/'+file_name
+    # print(path_sensor)
+    Individual.frame = Framework(path_sensor=path_sensor,
+                      path_wce=path_wce)
+    gbest_list = []
+    for x in range(10):
+      sys.stdout=open("logdir2/"+file_name+str(x),"w")
+      framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
+      framework.solve()
+      path_init=[i for i in range(1,framework.n_sensors_encode)]
+      print(path_init)
+      hpsoga=HPSOGA(path_init,100)
+      # for i in hpsoga.population:
+      #   print(framework.compute_fitness(i.path))
+      # neu khong tang sau 50 the he thi dung 
+      for _ in range(250):
+        print("generation {}:".format(_))
+        hpsoga.evalution()
+      # _,time_charging_each_node,total_charing,t_dri,e_mc_remain =
+      framework.get_alive(hpsoga.gbest.path)
+      sys.stdout.close()
+    #   print("nang luong sac:{}, thoi gian sac: {}".format(total_charing*framework.U,total_charing))
+    #   print("nang luong di chuyen: {}, thoi gian di chuyen: {}".format(t_dri*framework.P_M,t_dri))
+    #   print(time_charging_each_node)
+    #   print("nang luong con lai {}".format(e_mc_remain))
+    # for i in gbest_list:
+    #   i.print()
+      # from os import listdir
 
-    # for file in listdir("data_chi_huong/grid/base_station_(250.0, 250.0)/"):
-    #   if file[:4] != "gr25":
-    #     continue
-    #   print(file)
-    #   path_sensor = "data_chi_huong/grid/base_station_(250.0, 250.0)/"+file
-    #   framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
-    #   framework.solve()
-    #   if framework.sit_flag==1:
-    #     print("-------------------situation 1:")
-    #     print(path_sensor)
-          
+      # for file in listdir("data_chi_huong/grid/base_station_(250.0, 250.0)/"):
+      #   if file[:4] != "gr25":
+      #     continue
+      #   print(file)
+      #   path_sensor = "data_chi_huong/grid/base_station_(250.0, 250.0)/"+file
+      #   framework = Framework(path_wce= path_wce,path_sensor= path_sensor)
+      #   framework.solve()
+      #   if framework.sit_flag==1:
+      #     print("-------------------situation 1:")
+      #     print(path_sensor)
+            
