@@ -26,14 +26,12 @@ def de(fobj, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000):
                 if f < fitness[best_idx]:
                     best_idx = j
                     best = trial_denorm
-        yield best, fitness[best_idx]
+        print(best, fitness[best_idx])
 
-def fobj(x):
-  value = 0
-  for i in range(len(x)):
-      value += x[i]**2
-  return value / len(x)
+def fobj(x): # ham muc tieu
+  return x[0]**2 - 4*x[0]
 
 # de(fobj,[(-5,5) for i in range(4)])
-result = list(de(fobj,[(-5,5) for i in range(4)]))
-print(len(result))
+# result = list(de(fobj,[(-5,5) for i in range(4)]))
+# print(len(result))
+de(fobj,[(-20,20)])
