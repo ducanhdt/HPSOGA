@@ -62,8 +62,57 @@ class Framework():
         return matrix_distance
         
     def fobj(self,time_charging):
-        size_path=len(self.path)
         path_tmp=[0]+self.path
+        size_path=len(path_tmp)
+        time_driving=[]
+        n_dead=0
+        check_dead=[1]*(size_path-1)
+        E_mc=self.E_MC
+        E_remain=copy.copy(self.E_remain_T)
+        E_remain=[0]+E_remain
+        time_end_charnging_each_node=[0]*(size_path-1)
+        for i in range(size_path-1):
+            time_driving.append(self.matrix_distance[path_tmp[i]][path_tmp[i+1]]/self.v)
+        
+        time_coming=0
+        for i in range(1,size_path):
+            time_coming+=time_driving[i-1]
+            if(time_coming>self.T):
+                for j in range(i-1,size_path-1):
+                    check_dead[j]=0
+                break
+            E_remain[i]=float(E_remain[i])-float(self.sensors[i].pi)*time_coming
+            E_mc=E_mc-self.P_M*time_driving[i-1]
+            if(E_mc<=0):
+                for j in range(i-1,size_path-1):
+                    check_dead[j]=0
+                break
+            if(E_remain[i]<self.E_min):
+                check_dead[i-1]=0
+                time_coming+=time_charging[i-1]
+            else:
+                new_time=(self.E_max-E_remain[i])/(self.U-self.sensors[i].pi)
+                new_time=min(time_charging[i-1],new_time)
+                time_coming+=time_charging[i-1]
+                E_mc=E_mc-new_time*self.sensors[i].pi
+                time_end_charnging_each_node[i-1]=time_coming
+                E_remain[i]=E_remain[i]+new_time*self.sensors[i].pi
+        
+        time_coming+=self.matrix_distance[path_tmp[-1]][0]/self.v
+        for i in range(1,size_path):
+            E_remain[i]=float(E_remain[i])-float(self.sensors[i].pi)*(time_coming-time_end_charnging_each_node[i-1])
+        
+        for i in range(1,size_path):
+            if(check_dead[i-1]==1):
+                if(E_remain[i]<self.E_min):
+                    check_dead[i-1]=0
+                        
+        n_dead=size_path-1-sum(check_dead)
+        return n_dead    
+        
+    def get_alive(self):
+        path_tmp=[0]+self.path
+        size_path=len(path_tmp)
         time_driving=[]
         n_dead=0
         check_dead=[1]*(size_path-1)
@@ -88,15 +137,16 @@ class Framework():
                 break
             if(E_remain[i]<self.E_min):
                 check_dead[i-1]=0
-                time_coming+=time_charging[i]
+                new_time=(self.E_max-self.E_min)/(self.U-self.sensors[i].pi)
+                time_coming+=new_time
             else:
                 new_time=(self.E_max-E_remain[i])/(self.U-self.sensors[i].pi)
-                new_time=min(time_charging[i],new_time)
-                time_coming+=time_charging[i]
+                #new_time=min(time_charging[i-1],new_time)
+                time_coming+=new_time
                 E_mc=E_mc-new_time*self.sensors[i].pi            
                         
-        n_dead=size_path-1-sum(check_dead)
-        return n_dead        
+        n_dead=size_path-sum(check_dead)-1
+        return n_dead
     
     def de(self, bounds, mut=0.8, crossp=0.7, popsize=20, its=1000):
         dimensions = len(bounds)
@@ -124,16 +174,16 @@ class Framework():
                     if f < fitness[best_idx]:
                         best_idx = j
                         best = trial_denorm
-            print(best, fitness[best_idx])
-        
+            #print(best, fitness[best_idx])
+            print(fitness)
 
 
 path_wce='/home/lnq/Desktop/Hoc/2020/ttth/DE/wce.txt'
 path_sensor='/home/lnq/Desktop/Hoc/2020/ttth/DE/u75_01_simulated.txt'
 path_driving='/home/lnq/Desktop/Hoc/2020/ttth/DE/driving.txt'
 
-bounds=[(-10,10)]*75
+bounds=[(0,1000)]*75
 model=Framework(path_wce,path_sensor,path_driving)
-model.de(bounds,its=10)
-
+#model.de(bounds,its=1000)
+print(model.get_alive())
     
